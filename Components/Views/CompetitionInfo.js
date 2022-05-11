@@ -1,56 +1,81 @@
 import {
 	View,
 	Text,
-	Image,
 	ImageBackground,
 	TouchableOpacity,
-	FlatList,
 	ScrollView,
 } from "react-native";
-import React, {
-	useCallback,
-	useRef,
-	useState,
-} from "react";
+import React from "react";
+
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/FontAwesome";
 
+import { db } from "../../FireBase/FireBase";
+import { auth } from "../../FireBase/FireBase";
+
+import HyperLink from "react-native-hyperlink";
+
 const styles = require("../Styles/MainStyle");
 
-const competiton = {
-	id: "1",
-	title: "Mountain running",
-	text: "Sigulda",
-	date: "20/04/2022",
-	location: "Sigulda, Laurenci",
-	organizers: "Siguldas dome",
-	bulletinLink: "MountainrunningSiguldasdome.com",
-	competitonInfo:
-		"Nunc sit amet ullamcorper purus. Nullam ligula nunc, fringilla sed libero blandit, pulvinar fermentum elit." +
-		" Cras ultrices, sem ac auctor imperdiet, diam erat fringilla augue, ac tincidunt elit metus a elit. Fusce sagittis sapien vel lorem consectetur dictum." +
-		" Vivamus sodales suscipit consectetur. In et bibendum nibh. Nunc a enim nec nisl fermentum maximus. Cras convallis vestibulum mollis. Nam id mattis dui." +
-		" \n\nVivamus vel tincidunt nibh, nec posuere libero. Fusce eget maximus elit, ac commodo mi." +
-		"Nam vitae nibh lacinia, porta mi nec, vulputate risus. Nunc a felis ligula. Proin porttitor est nec ex finibus, a vulputate diam fringilla." +
-		"Maecenas tincidunt purus a varius malesuada. Vivamus faucibus dictum arcu, a eleifend libero rhoncus at. Donec tempor, arcu et pellentesque auctor," +
-		" dolor nulla lacinia nibh, ut tincidunt nisl lorem volutpat ante. Morbi aliquet felis eu pulvinar cursus.",
-
-	phoneNr: "23123131",
-	email: "Siguldasdome@gmail.com",
-	uri: "https://blog.sports-tracker.com/wp-content/uploads/2017/04/JaakkoPostiPyhaTunturiMaraton1.jpg",
-	attended: true,
-};
-
-const CompetitonInfo = ({ navigation }) => {
+const CompetitonInfo = ({
+	navigation,
+	route,
+}) => {
+	//States for attendence state change
 	var [isDenyPress, setDenyIsPress] =
 		React.useState(false);
+
 	var [isIntrestPress, setIntrestIsPress] =
 		React.useState(false);
+
+	const checkAttendence = () => {
+		db.collection("UserCompetitions")
+			.doc(
+				auth.currentUser.uid +
+					route.params.item.title
+			)
+			.get()
+			.then((snaoshot) => {
+				if (snaoshot.data().attended == false) {
+					setDenyIsPress(true);
+				} else {
+					setIntrestIsPress(true);
+					true;
+				}
+				console.log(snaoshot.data());
+			});
+	};
+
+	checkAttendence();
 
 	var buttonIntrestProps = {
 		style: isIntrestPress
 			? styles.intrestButtonPressed
 			: styles.intrestButtonNormal,
 		onPress: () => {
+			db
+				.collection("UserCompetitions")
+				.doc(
+					auth.currentUser.uid +
+						route.params.item.title
+				)
+				.set({
+					attended: true,
+					date: route.params.item.date,
+					text: route.params.item.text,
+					title: route.params.item.title,
+					userId: auth.currentUser.uid,
+					description:
+						route.params.item.description,
+					email: route.params.item.email,
+					location: route.params.item.location,
+					uri: route.params.item.uri,
+					bulletinLink:
+						route.params.item.bulletinLink,
+					organizers:
+						route.params.item.organizers,
+				}),
+				console.log("item sent");
 			isIntrestPress
 				? setIntrestIsPress(false)
 				: setIntrestIsPress(true),
@@ -62,6 +87,27 @@ const CompetitonInfo = ({ navigation }) => {
 			? styles.denyButtonPressed
 			: styles.denyButtonNormal,
 		onPress: () => {
+			db.collection("UserCompetitions")
+				.doc(
+					auth.currentUser.uid +
+						route.params.item.title
+				)
+				.set({
+					attended: false,
+					date: route.params.item.date,
+					text: route.params.item.text,
+					title: route.params.item.title,
+					userId: auth.currentUser.uid,
+					description:
+						route.params.item.description,
+					email: route.params.item.email,
+					location: route.params.item.location,
+					uri: route.params.item.uri,
+					bulletinLink:
+						route.params.item.bulletinLink,
+					organizers:
+						route.params.item.organizers,
+				});
 			isDenyPress
 				? setDenyIsPress(false)
 				: setDenyIsPress(true),
@@ -92,7 +138,9 @@ const CompetitonInfo = ({ navigation }) => {
 			<View style={styles.contentCompetition}>
 				<View style={styles.headerBox}>
 					<ImageBackground
-						source={{ uri: competiton.uri }}
+						source={{
+							uri: route.params.item.uri,
+						}}
 						style={styles.competitionHeader}
 						imageStyle={{ borderRadius: 10 }}
 					>
@@ -102,7 +150,7 @@ const CompetitonInfo = ({ navigation }) => {
 							}
 						>
 							<Text style={styles.header}>
-								{competiton.title}
+								{route.params.item.title}
 							</Text>
 						</View>
 					</ImageBackground>
@@ -118,7 +166,7 @@ const CompetitonInfo = ({ navigation }) => {
 							numberOfLines={1}
 						>
 							{" "}
-							{competiton.location}
+							{route.params.item.location}
 						</Text>
 					</Text>
 					<Text
@@ -128,7 +176,7 @@ const CompetitonInfo = ({ navigation }) => {
 						Date:
 						<Text style={styles.smallText}>
 							{" "}
-							{competiton.date}
+							{route.params.item.date}
 						</Text>
 					</Text>
 					<Text
@@ -138,16 +186,27 @@ const CompetitonInfo = ({ navigation }) => {
 						Organizers:{" "}
 						<Text style={styles.smallText}>
 							{" "}
-							{competiton.organizers}
+							{route.params.item.organizers}
 						</Text>
 					</Text>
-					<Text style={styles.smallTextFaded}>
-						Link to bulletin:
-						<Text style={styles.smallText}>
-							{" "}
-							Click here
+					<HyperLink
+						style={styles.smallText}
+						linkDefault={true}
+						linkText={(url) =>
+							url ===
+							route.params.item.bulletinLink
+								? "Click here"
+								: url
+						}
+					>
+						<Text style={styles.smallTextFaded}>
+							Link to bulletin:
+							<Text style={styles.smallText}>
+								{" "}
+								{route.params.item.bulletinLink}
+							</Text>
 						</Text>
-					</Text>
+					</HyperLink>
 					<View style={styles.contactsBox}>
 						<View style={styles.contactsIconBox}>
 							<Icon
@@ -170,7 +229,7 @@ const CompetitonInfo = ({ navigation }) => {
 								numberOfLines={1}
 							>
 								{" "}
-								{competiton.phoneNr}
+								{route.params.item.phoneNr}
 							</Text>
 							<Text
 								style={[
@@ -180,7 +239,7 @@ const CompetitonInfo = ({ navigation }) => {
 								numberOfLines={1}
 							>
 								{" "}
-								{competiton.email}
+								{route.params.item.email}
 							</Text>
 						</View>
 					</View>
@@ -194,7 +253,7 @@ const CompetitonInfo = ({ navigation }) => {
 							{ marginBottom: "10%" },
 						]}
 					>
-						{competiton.competitonInfo}
+						{route.params.item.description}
 					</Text>
 				</ScrollView>
 				<View style={styles.intrestButtonBox}>

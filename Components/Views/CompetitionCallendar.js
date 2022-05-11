@@ -1,11 +1,8 @@
 import {
 	View,
 	Text,
-	Image,
-	ImageBackground,
 	TouchableOpacity,
 	FlatList,
-	ScrollView,
 } from "react-native";
 import React, {
 	useCallback,
@@ -13,54 +10,13 @@ import React, {
 	useRef,
 	useState,
 } from "react";
-import { LinearGradient } from "expo-linear-gradient";
-import Carousel, {
-	Pagination,
-} from "react-native-snap-carousel";
 
+import { LinearGradient } from "expo-linear-gradient";
+import Carousel from "react-native-snap-carousel";
 import NavBar from "../Navigation/NavBar";
-import { Calendar } from "react-native-calendars";
+import { db } from "../../FireBase/FireBase";
 
 const styles = require("../Styles/MainStyle");
-
-const exampleItems = [
-	{
-		id: "1",
-		title: "Mountain running",
-		place: "Sigulda",
-		date: "20/04/2022",
-	},
-	{
-		id: "2",
-		title: "Marathon",
-		place: "Riga",
-		date: "15/06/2022",
-	},
-	{
-		id: "3",
-		title: "Orientiering",
-		place: "Madona",
-		date: "15/06/2022",
-	},
-	{
-		id: "4",
-		title: "Marathon",
-		place: "Riga",
-		date: "15/06/2022",
-	},
-	{
-		id: "5",
-		title: "Beach run",
-		place: "Saulkrasti",
-		date: "18/07/2022",
-	},
-	{
-		id: "6",
-		title: "Mountain running",
-		place: "Gaizins",
-		date: "19/07/2022",
-	},
-];
 
 const monthNames = [
 	"January",
@@ -77,34 +33,92 @@ const monthNames = [
 	"December",
 ];
 
-const Item = ({ data }) => (
-	<View style={styles.callendarCompetitionBox}>
-		<View>
-			<Text style={styles.competitonTitle}>
-				{data.item.title}
-			</Text>
-			<View>
-				<Text style={styles.competitonInfo}>
-					{data.item.place}
-				</Text>
-				<Text style={styles.competitionDate}>
-					{data.item.date}
-				</Text>
-			</View>
-		</View>
-	</View>
-);
-
 const CompetitionCallendar = ({ navigation }) => {
+	//Active carusel item state
 	const [activeIndex, setActiveIndex] =
 		useState(0);
+	//Carusel object state
 	const [carouselItems, setCarouselItems] =
 		useState(monthNames);
+	//Competition object state
+	const [competitions, setCompetitions] =
+		useState([]);
+	//Refrence to null
 	const ref = useRef(null);
 
+	const getMonthFromString = (mon) => {
+		var d = Date.parse(mon + "1, 2022");
+		if (!isNaN(d)) {
+			return new Date(d).getMonth();
+		}
+		return -2;
+	};
+
+	var exportData = [];
+	useEffect(async () => {
+		await db
+			.collection("Competitions")
+			.get()
+			.then((querySnapshot) => {
+				console.log(
+					"Competitions: ",
+					querySnapshot.size
+				);
+				querySnapshot.forEach(
+					(documentSnapshot) => {
+						var date =
+							documentSnapshot.data().date;
+						exportData.push(
+							documentSnapshot.data()
+						);
+						console.log(documentSnapshot.data());
+					}
+				);
+			});
+		setCompetitions(exportData);
+	}, []);
+
+	const Item = ({ data }) => {
+		const d = new Date(data.item.date);
+		if (
+			getMonthFromString(
+				carouselItems[activeIndex]
+			) === d.getMonth()
+		) {
+			return (
+				<TouchableOpacity
+					style={styles.callendarCompetitionBox}
+					onPress={() =>
+						navigation.navigate("Competition", {
+							item: data.item,
+						})
+					}
+				>
+					<View>
+						<Text style={styles.competitonTitle}>
+							{data.item.title}
+						</Text>
+						<View>
+							<Text style={styles.competitonInfo}>
+								{data.item.place}
+							</Text>
+							<Text
+								style={styles.competitionDate}
+							>
+								{data.item.date}
+							</Text>
+						</View>
+					</View>
+				</TouchableOpacity>
+			);
+		} else {
+			return <View></View>;
+		}
+	};
+
 	const renderCompetitionItem = (
-		exampleItems
-	) => <Item data={exampleItems} />;
+		competitions
+	) => <Item data={competitions} />;
 
 	const renderItem = useCallback(
 		({ item, index }) => (
@@ -154,7 +168,7 @@ const CompetitionCallendar = ({ navigation }) => {
 						style={styles.callendarContentBox}
 					>
 						<FlatList
-							data={exampleItems}
+							data={competitions}
 							renderItem={renderCompetitionItem}
 							keyExtractor={(item) => item.id}
 						></FlatList>

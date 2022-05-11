@@ -136,8 +136,10 @@ module.exports = StyleSheet.create({
 	profileBox: {
 		display: "flex",
 		flexDirection: "row",
-		height: "20%",
+		height: "10%",
 		width: "90%",
+		justifyContent: "center",
+		alignItems: "center",
 		backgroundColor: "rgba(0, 0, 0,0.4)",
 		marginBottom: "8%",
 		borderRadius: 10,
@@ -145,7 +147,7 @@ module.exports = StyleSheet.create({
 
 	profileCompetitionBox: {
 		display: "flex",
-		height: "40%",
+		height: "50%",
 		width: "90%",
 		backgroundColor: "rgba(0, 0, 0,0.4)",
 		borderRadius: 10,
@@ -188,7 +190,7 @@ module.exports = StyleSheet.create({
 	settings: {
 		display: "flex",
 		position: "absolute",
-		top: windowHeight * 0.15,
+		top: windowHeight * 0.06,
 		left: windowWidth * 0.84,
 	},
 
@@ -379,18 +381,21 @@ module.exports = StyleSheet.create({
 	settingsBox: {
 		display: "flex",
 		width: "90%",
-		height: "60%",
+		height: "20%",
+		justifyContent: "center",
+		alignItems: "center",
 		backgroundColor: "rgba(0, 0, 0,0.2)",
 		borderRadius: 10,
+		marginTop: "90%",
 	},
 	settingOption: {
 		display: "flex",
 		flexDirection: "row",
 		alignItems: "center",
+		justifyContent: "center",
 		width: "100%",
-		height: "20%",
-		borderBottomWidth: 4,
-		borderBottomColor: "rgba(0,0,0,0.5)",
+		height: "100%",
+		paddingLeft: "20%",
 	},
 	settingsIconBox: {
 		display: "flex",

@@ -1,12 +1,10 @@
 import React, {
-	useCallback,
 	useEffect,
 	useState,
 } from "react";
 import {
 	View,
 	Text,
-	ImageBackground,
 	TouchableOpacity,
 	TextInput,
 } from "react-native";
@@ -18,7 +16,18 @@ const styles = require("../Styles/MainStyle");
 
 const Login = ({ navigation }) => {
 	const [email, setEmail] = useState("");
+
 	const [password, setPassword] = useState("");
+
+	useEffect(() => {
+		auth.onAuthStateChanged(function (user) {
+			if (user) {
+				navigation.navigate("Home");
+			} else {
+				// no user logged in. currentUser is null.
+			}
+		});
+	}, []);
 
 	const handleLogin = () => {
 		auth

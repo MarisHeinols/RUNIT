@@ -25,7 +25,9 @@ if (firebase.apps.length === 0) {
 } else {
 	app = firebase.app();
 }
-
+//Get data base
+const db = firebase.firestore();
+//Get authentication
 const auth = firebase.auth();
 
-export { auth };
+export { auth, db };

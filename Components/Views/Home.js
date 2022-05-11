@@ -1,5 +1,6 @@
 import React, {
 	useCallback,
+	useEffect,
 	useRef,
 	useState,
 } from "react";
@@ -9,49 +10,16 @@ import {
 	ImageBackground,
 	TouchableOpacity,
 } from "react-native";
+
 import Carousel, {
 	Pagination,
 } from "react-native-snap-carousel";
-
-import Icon from "react-native-vector-icons/FontAwesome";
 import { LinearGradient } from "expo-linear-gradient";
-
 import NavBar from "../Navigation/NavBar";
+import { db } from "../../FireBase/FireBase";
 
 const styles = require("../Styles/MainStyle");
 
-const exampleItems = [
-	{
-		title: "Mountain running",
-		text: "Sigulda",
-		uri: "https://blog.sports-tracker.com/wp-content/uploads/2017/04/JaakkoPostiPyhaTunturiMaraton1.jpg",
-		date: "20/04/2022",
-	},
-	{
-		title: "Marathon",
-		text: "Riga",
-		uri: "https://www.justrunlah.com/wp-content/uploads/2017/05/Running.jpg",
-		date: "15/06/2022",
-	},
-	{
-		title: "Orientiering",
-		text: "Madona",
-		uri: "https://miro.medium.com/max/512/1*oNw3l7OCsTd-A3sbT_tV1A.jpeg",
-		date: "15/06/2022",
-	},
-	{
-		title: "Beach run",
-		text: "Saulkrasti",
-		uri: "https://images.pond5.com/woman-running-beach-footage-081538706_iconl.jpeg",
-		date: "18/07/2022",
-	},
-	{
-		title: "Mountain running",
-		text: "Gaizins",
-		uri: "https://blog.sports-tracker.com/wp-content/uploads/2017/04/JaakkoPostiPyhaTunturiMaraton1.jpg",
-		date: "19/07/2022",
-	},
-];
 const monthNames = [
 	"January",
 	"February",
@@ -68,17 +36,63 @@ const monthNames = [
 ];
 
 const Home = ({ navigation }) => {
+	const d = new Date();
+	const date = d.getDate();
+	const month = d.getMonth();
+	const year = d.getFullYear();
+	const fullDate =
+		month + "/" + date + "/" + year;
+	const dateParts = fullDate.split("/");
+
+	const [competitions, setCompetitions] =
+		useState([]);
+
+	var exportData = [];
+	useEffect(async () => {
+		await db
+			.collection("Competitions")
+			.get()
+			.then((querySnapshot) => {
+				console.log(
+					"Competitions: ",
+					querySnapshot.size
+				);
+				querySnapshot.forEach(
+					(documentSnapshot) => {
+						var date =
+							documentSnapshot.data().date;
+						var dateSplited = date.split("/");
+						console.log(dateSplited);
+
+						if (
+							dateSplited[0] ==
+							parseInt(dateParts[0]) + 1
+						) {
+							exportData.push(
+								documentSnapshot.data()
+							);
+							console.log(
+								documentSnapshot.data()
+							);
+						}
+					}
+				);
+			});
+		setCompetitions(exportData);
+	}, []);
+
 	const [activeIndex, setActiveIndex] =
 		useState(0);
-	const [carouselItems, setCarouselItems] =
-		useState(exampleItems);
+
 	const ref = useRef(null);
 
 	const renderItem = useCallback(
 		({ item, index }) => (
 			<TouchableOpacity
 				onPress={() =>
-					navigation.navigate("Competition")
+					navigation.navigate("Competition", {
+						item: item,
+					})
 				}
 			>
 				<ImageBackground
@@ -99,7 +113,11 @@ const Home = ({ navigation }) => {
 							style={{
 								fontSize: 30,
 								color: "white",
+								numberOfLines: 1,
+								ellipsizeMode: "head",
 							}}
+							numberOfLines={1}
+							ellipsizeMode="middle"
 						>
 							{item.title}
 						</Text>
@@ -111,8 +129,13 @@ const Home = ({ navigation }) => {
 								justifyContent: "space-between",
 							}}
 						>
-							<Text style={{ color: "white" }}>
-								{item.text}
+							<Text
+								style={{
+									color: "white",
+								}}
+								numberOfLines={1}
+							>
+								{item.location}
 							</Text>
 							<Text
 								style={{
@@ -129,8 +152,6 @@ const Home = ({ navigation }) => {
 		),
 		[]
 	);
-
-	const d = new Date();
 
 	return (
 		<LinearGradient
@@ -154,7 +175,7 @@ const Home = ({ navigation }) => {
 							layout={"stack"}
 							layoutCardOffset={40}
 							ref={ref}
-							data={carouselItems}
+							data={competitions}
 							sliderWidth={350}
 							itemWidth={350}
 							renderItem={renderItem}
@@ -173,7 +194,7 @@ const Home = ({ navigation }) => {
 					</View>
 					<Pagination
 						carouselRef={ref}
-						dotsLength={carouselItems.length}
+						dotsLength={competitions.length}
 						activeDotIndex={activeIndex}
 						containerStyle={{
 							height: "20%",

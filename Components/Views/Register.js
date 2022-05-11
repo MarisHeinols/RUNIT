@@ -1,14 +1,10 @@
-import React, {
-	useCallback,
-	useRef,
-	useState,
-} from "react";
+import React, { useState } from "react";
 import {
 	View,
 	Text,
-	ImageBackground,
 	TouchableOpacity,
 	TextInput,
+	Alert,
 } from "react-native";
 
 import { LinearGradient } from "expo-linear-gradient";
@@ -18,14 +14,19 @@ const Register = ({ navigation }) => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 
-	const handleSignUp = () => {
-		auth
+	const handleSignUp = async () => {
+		await auth
 			.createUserWithEmailAndPassword(
 				email,
 				password
 			)
 			.then((userCredentials) => {
 				const user = userCredentials.user;
+				Alert.alert("User registered", "", [
+					{
+						text: "OK",
+					},
+				]);
 				navigation.navigate("Login");
 			})
 			.catch((error) => alert(error.message));
@@ -75,7 +76,7 @@ const Register = ({ navigation }) => {
 						}
 					></TextInput>
 					<TouchableOpacity
-						onPress={handleSignUp()}
+						onPress={() => handleSignUp()}
 						style={styles.button}
 					>
 						<View>
@@ -86,6 +87,31 @@ const Register = ({ navigation }) => {
 								]}
 							>
 								REGISTER
+							</Text>
+						</View>
+					</TouchableOpacity>
+					<TouchableOpacity
+						onPress={() =>
+							navigation.navigate("Login")
+						}
+						style={[
+							styles.button,
+							{
+								backgroundColor:
+									"rgba(238, 22, 69, 0.8)",
+								height: "10%",
+								width: "40%",
+							},
+						]}
+					>
+						<View>
+							<Text
+								style={[
+									styles.smallText,
+									{ paddingBottom: 0 },
+								]}
+							>
+								CANCEL
 							</Text>
 						</View>
 					</TouchableOpacity>

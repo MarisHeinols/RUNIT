@@ -1,13 +1,11 @@
 import {
 	View,
 	Text,
-	Image,
 	TouchableOpacity,
 	FlatList,
 } from "react-native";
 import React, {
-	useCallback,
-	useRef,
+	useEffect,
 	useState,
 } from "react";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -15,94 +13,71 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import NavBar from "../Navigation/NavBar";
 import { auth } from "../../FireBase/FireBase";
+import { db } from "../../FireBase/FireBase";
 
 const styles = require("../Styles/MainStyle");
 
-const exampleUser = {
-	name: "Martins",
-	surname: "Ritins",
-	age: "42",
-	location: "Riga",
-	club: "Lasis",
-	uri: "https://pickaface.net/gallery/avatar/unr_random_180410_1905_z1exb.png",
-};
-const compettions = [
-	{
-		id: "1",
-		title: "Mountain running",
-		place: "Sigulda",
-		date: "20/04/2022",
-		attended: true,
-	},
-	{
-		id: "2",
-		title: "Marathon",
-		place: "Riga",
-		date: "15/06/2022",
-		attended: true,
-	},
-	{
-		id: "3",
-		title: "Orientiering",
-		place: "Madona",
-		date: "15/06/2022",
-		attended: false,
-	},
-	{
-		id: "4",
-		title: "Marathon",
-		place: "Riga",
-		date: "15/06/2022",
-		attended: true,
-	},
-	{
-		id: "5",
-		title: "Beach run",
-		place: "Saulkrasti",
-		date: "18/07/2022",
-		attended: true,
-	},
-	{
-		id: "6",
-		title: "Mountain running",
-		place: "Gaizins",
-		date: "19/07/2022",
-		attended: false,
-	},
-];
-const Item = ({ data }) => (
-	<View style={styles.callendarCompetitionBox}>
-		<View>
-			<Text style={styles.competitonTitle}>
-				{data.item.title}
-			</Text>
-			<View>
-				<Text style={styles.competitonInfo}>
-					{data.item.place}
-				</Text>
-				<Text style={styles.competitionDate}>
-					{data.item.date}
-				</Text>
-			</View>
-		</View>
-		{data.item.attended ? (
-			<Icon
-				name="check"
-				size={30}
-				color="rgba(0, 207, 138,0.8)"
-			/>
-		) : (
-			<Icon
-				name="times-circle"
-				size={30}
-				color="rgba(199, 54, 63,0.8)"
-			/>
-		)}
-	</View>
-);
-
 const Profile = ({ navigation }) => {
-	const [user, setUser] = useState(exampleUser);
+	const [competitions, setCompetitions] =
+		useState([]);
+
+	const fetchCompetitons = async () => {
+		var exportData = [];
+		db.collection("UserCompetitions")
+			.where(
+				"userId",
+				"==",
+				auth.currentUser?.uid
+			)
+			.get()
+			.then((querySnapshot) => {
+				querySnapshot.forEach(
+					(documentSnapshot) => {
+						exportData.push(
+							documentSnapshot.data()
+						);
+						console.log(documentSnapshot.data());
+					}
+				);
+				setCompetitions(exportData);
+			});
+	};
+
+	useEffect(async () => {
+		console.log();
+		await fetchCompetitons();
+	}, []);
+
+	const Item = ({ data }) => (
+		<View style={styles.callendarCompetitionBox}>
+			<View>
+				<Text style={styles.competitonTitle}>
+					{data.item.title}
+				</Text>
+				<View>
+					<Text style={styles.competitonInfo}>
+						{data.item.place}
+					</Text>
+					<Text style={styles.competitionDate}>
+						{data.item.date}
+					</Text>
+				</View>
+			</View>
+			{data.item.attended ? (
+				<Icon
+					name="check"
+					size={30}
+					color="rgba(0, 207, 138,0.8)"
+				/>
+			) : (
+				<Icon
+					name="times-circle"
+					size={30}
+					color="rgba(199, 54, 63,0.8)"
+				/>
+			)}
+		</View>
+	);
 
 	const renderItem = (compettionData) => (
 		<Item data={compettionData} />
@@ -121,34 +96,15 @@ const Profile = ({ navigation }) => {
 					</Text>
 				</View>
 				<View style={styles.profileBox}>
-					<View style={styles.profilePictureBox}>
-						<Image
-							style={styles.avatar}
-							source={{
-								uri: user.uri,
-							}}
-						/>
-					</View>
-					<View style={styles.profileInfoBox}>
-						<Text
-							style={
-								user.name.length > 10
-									? styles.smallText
-									: styles.mediumText
-							}
-						>
-							{user.name} {user.surname}
-						</Text>
-						<Text style={styles.smallText}>
-							AGE: {user.age}
-						</Text>
-						<Text style={styles.smallText}>
-							FROM: {auth.currentUser?.email}
-						</Text>
-						<Text style={styles.smallText}>
-							CLUB: {user.club}
-						</Text>
-					</View>
+					<Text
+						style={[
+							styles.smallText,
+							{ paddingBottom: 0 },
+						]}
+						numberOfLines={1}
+					>
+						{auth.currentUser?.email}
+					</Text>
 					<View style={styles.settings}>
 						<TouchableOpacity
 							onPress={() =>
@@ -168,7 +124,7 @@ const Profile = ({ navigation }) => {
 					style={styles.profileCompetitionBox}
 				>
 					<FlatList
-						data={compettions}
+						data={competitions}
 						renderItem={renderItem}
 						keyExtractor={(item) => item.id}
 					></FlatList>
